@@ -15,6 +15,12 @@
         )
     </insert>
 
+    <update id="updateDjMent">
+        UPDATE radio_sessions
+        SET dj_ment = #{djMent}
+        WHERE id = #{id}
+    </update>
+
     <!-- 세션 조회 -->
     <select id="selectRadioSessionByIdAndUserId"
         resultType="com.ssafy.revibek.radio.dto.RadioResponseDto">
@@ -56,6 +62,7 @@
                s.title,
                s.artist,
                s.genre,
+               s.era,
                s.generation,
                s.mood,
                s.youtube_url,

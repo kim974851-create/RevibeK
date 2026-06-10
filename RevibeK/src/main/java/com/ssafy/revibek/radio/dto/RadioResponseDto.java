@@ -31,6 +31,7 @@ public class RadioResponseDto {
 		private String title;
 		private String artist;
 		private String genre;
+		private String era;
 		private String generation;
 		private String mood;
 		private String youtubeUrl;

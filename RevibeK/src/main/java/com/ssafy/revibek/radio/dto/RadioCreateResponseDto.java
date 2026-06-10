@@ -1,6 +1,5 @@
 package com.ssafy.revibek.radio.dto;
 
-import com.ssafy.revibek.song.dto.SongDto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -11,6 +10,11 @@ import java.util.List;
 public class RadioCreateResponseDto {
     private String radioSessionId;
     private String title;
-    private String djMessage;
-    private List<SongDto> recommendedSongs;
+    private String mood;
+    private String story;
+    private String djMent;
+    private String ttsMode;
+    private String ttsAudioUrl;
+    private String ttsAudioContent;
+    private List<RecommendedSongResponseDto> recommendedSongs;
 }

@@ -8,6 +8,8 @@ import lombok.Data;
 public class TtsResponseDto {
     private String mode;
     private String lang;
+    private String audioUrl;
+    private String audioContent;
     private String text;
     private String message;
 }

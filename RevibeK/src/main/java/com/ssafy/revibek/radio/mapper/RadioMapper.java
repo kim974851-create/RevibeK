@@ -19,6 +19,8 @@ public interface RadioMapper {
 						   @Param("mood") String mood,
 						   @Param("story") String story,
 						   @Param("djMent") String djMent);
+	int updateDjMent(@Param("id") String id,
+					 @Param("djMent") String djMent);
 	RadioResponseDto selectRadioSessionByIdAndUserId(@Param("id") String id,
 													 @Param("userId") String userId);
 	RadioResponseDto selectRadioSessionById(@Param("id") String id);
