@@ -50,6 +50,43 @@ public class SongServiceImpl implements SongService {
     }
 
     @Override
+    public List<SongDto> getRadioRecommendedSongs(String generation, String mood, int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 5));
+
+        List<SongDto> songs = songDao.selectRecommendedSongsForRadio(generation, mood, safeLimit);
+        if (!songs.isEmpty()) {
+            return songs;
+        }
+
+        songs = songDao.selectSongsByGeneration(generation, safeLimit);
+        if (!songs.isEmpty()) {
+            return songs;
+        }
+
+        songs = songDao.selectSongsByMood(mood, safeLimit);
+        if (!songs.isEmpty()) {
+            return songs;
+        }
+
+        return songDao.selectTopScoreSongs(safeLimit);
+    }
+
+    @Override
+    public List<SongDto> getSongsByGeneration(String generation, int limit) {
+        return songDao.selectSongsByGeneration(generation, Math.max(1, Math.min(limit, 20)));
+    }
+
+    @Override
+    public List<SongDto> getSongsByMood(String mood, int limit) {
+        return songDao.selectSongsByMood(mood, Math.max(1, Math.min(limit, 20)));
+    }
+
+    @Override
+    public List<SongDto> getTopScoreSongs(int limit) {
+        return songDao.selectTopScoreSongs(Math.max(1, Math.min(limit, 20)));
+    }
+
+    @Override
     public int modifySong(SongDto song) {
         return songDao.updateSong(song);
     }

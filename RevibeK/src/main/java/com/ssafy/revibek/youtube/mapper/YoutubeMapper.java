@@ -11,7 +11,7 @@ public interface YoutubeMapper {
     // Channel CRUD
     void insertChannel(YoutubeChannelDto channel);
     YoutubeChannelDto findChannelByChannelId(String channelId);
-    Long findChannelIdByChannelId(String channelId);
+    String findChannelIdByChannelId(String channelId);
     List<YoutubeChannelDto> findAllChannels();
     void updateChannel(YoutubeChannelDto channel);
     void deleteChannel(String channelId);

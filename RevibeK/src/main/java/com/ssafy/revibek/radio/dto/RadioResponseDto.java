@@ -11,6 +11,10 @@ import lombok.NoArgsConstructor;
 public class RadioResponseDto {
 	
 	private String id;
+	private String title;
+	private String emotion;
+	private String situation;
+	private String generation;
 	private String mood;
 	private String story;
 	private String djMent;
@@ -26,6 +30,12 @@ public class RadioResponseDto {
 		private String songId;
 		private String title;
 		private String artist;
+		private String genre;
+		private String generation;
+		private String mood;
+		private String youtubeUrl;
+		private String youtubeVideoId;
+		private String thumbnailUrl;
 		private int orderNum;
 		private String reason;
 	}

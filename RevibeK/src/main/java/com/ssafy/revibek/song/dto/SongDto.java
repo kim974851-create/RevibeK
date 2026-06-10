@@ -23,9 +23,12 @@ public class SongDto {
     private String artist;
     private String genre;
     private String era;
+    private String generation;
+    private String mood;
     private String type;
     private String youtubeUrl;
     private String youtubeId;
+    private String thumbnailUrl;
     private int viewCount;
     private int likeCount;
     private float trendScore;

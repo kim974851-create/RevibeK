@@ -12,6 +12,10 @@ public interface SongService {
     SongDto getSongByTitle(String title);
     List<SongDto> getSongsByGenre(String genre);
     List<SongDto> getRecommendSongs();
+    List<SongDto> getRadioRecommendedSongs(String generation, String mood, int limit);
+    List<SongDto> getSongsByGeneration(String generation, int limit);
+    List<SongDto> getSongsByMood(String mood, int limit);
+    List<SongDto> getTopScoreSongs(int limit);
     int modifySong(SongDto song);
     int removeSong(String id);
 }

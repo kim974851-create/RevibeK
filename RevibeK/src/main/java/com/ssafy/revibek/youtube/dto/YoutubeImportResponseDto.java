@@ -4,12 +4,13 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class YoutubeChannelDto {
- private String channelId;
- private String channelName;
- private String channelUrl;
- private String uploadsPlaylist;
+public class YoutubeImportResponseDto {
+    private String source;
+    private String message;
+    private List<YoutubeVideoResponseDto> videos;
 }
