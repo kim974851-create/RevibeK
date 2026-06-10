@@ -2,6 +2,8 @@
 package com.ssafy.revibek.youtube.controller;
 
 import com.ssafy.revibek.youtube.service.YoutubeService;
+import com.ssafy.revibek.youtube.dto.YoutubeImportResponseDto;
+import com.ssafy.revibek.youtube.dto.YoutubeVideoResponseDto;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import lombok.RequiredArgsConstructor;
@@ -22,16 +24,19 @@ public class YoutubeController {
     private final YoutubeService youtubeService;
 
     @PostMapping("/channel")
-    public ResponseEntity<String> addChannel(@RequestBody Map<String, String> request) {
+    public ResponseEntity<YoutubeImportResponseDto> addChannel(@RequestBody Map<String, String> request) {
         String url = request.get("url");
-        youtubeService.processChannel(url);
-        return ResponseEntity.ok("채널 추가 완료");
+        return ResponseEntity.ok(youtubeService.processChannel(url));
     }
 
     @PostMapping("/channels")
-    public ResponseEntity<String> addChannels(@RequestBody Map<String, List<String>> request) {
+    public ResponseEntity<YoutubeImportResponseDto> addChannels(@RequestBody Map<String, List<String>> request) {
         List<String> urls = request.get("urls");
-        urls.forEach(youtubeService::processChannel);
-        return ResponseEntity.ok("채널 " + urls.size() + "개 추가 완료");
+        List<YoutubeVideoResponseDto> videos = urls.stream()
+            .map(youtubeService::processChannel)
+            .flatMap(response -> response.getVideos().stream())
+            .toList();
+        String source = videos.isEmpty() ? "DUMMY" : "YOUTUBE_OR_DUMMY";
+        return ResponseEntity.ok(new YoutubeImportResponseDto(source, "채널 " + urls.size() + "개 처리 완료", videos));
     }
 }

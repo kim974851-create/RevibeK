@@ -12,10 +12,18 @@ public interface RadioMapper {
 	
 	int insertRadioSession(@Param("id") String id,
 						   @Param("userId") String userId,
+						   @Param("title") String title,
+						   @Param("emotion") String emotion,
+						   @Param("situation") String situation,
+						   @Param("generation") String generation,
 						   @Param("mood") String mood,
-						   @Param("story") String story);
+						   @Param("story") String story,
+						   @Param("djMent") String djMent);
+	int updateDjMent(@Param("id") String id,
+					 @Param("djMent") String djMent);
 	RadioResponseDto selectRadioSessionByIdAndUserId(@Param("id") String id,
 													 @Param("userId") String userId);
+	RadioResponseDto selectRadioSessionById(@Param("id") String id);
 	List<RadioResponseDto> selectRadioSessionByUserId(@Param("userId") String userId);
 	void insertRecommendation(@Param("sessionId") String sessionId,
 							  @Param("songId")	String songId,

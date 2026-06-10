@@ -11,4 +11,5 @@ public class YoutubeChannelDto {
  private String channelId;
  private String channelName;
  private String channelUrl;
+ private String uploadsPlaylist;
 }

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.revibek.playlist.mapper.PlaylistMapper">
+
+    <insert id="insertPlaylist">
+        INSERT INTO playlists (id, user_id, name, mood_tag, is_public)
+        VALUES (#{id}, #{userId}, #{name}, #{moodTag}, #{isPublic})
+    </insert>
+
+    <select id="selectPlaylistsByUserId"
+        resultType="com.ssafy.revibek.playlist.dto.PlaylistResponseDto">
+        SELECT p.id,
+               p.user_id,
+               p.name,
+               p.mood_tag,
+               p.is_public,
+               COUNT(ps.id) AS song_count,
+               p.created_at
+        FROM playlists p
+        LEFT JOIN playlist_songs ps ON ps.playlist_id = p.id
+        WHERE p.user_id = #{userId}
+        GROUP BY p.id, p.user_id, p.name, p.mood_tag, p.is_public, p.created_at
+        ORDER BY p.created_at DESC
+    </select>
+
+    <select id="countPlaylistByIdAndUserId" resultType="int">
+        SELECT COUNT(1)
+        FROM playlists
+        WHERE id = #{playlistId}
+          AND user_id = #{userId}
+    </select>
+
+    <select id="countPlaylistSong" resultType="int">
+        SELECT COUNT(1)
+        FROM playlist_songs
+        WHERE playlist_id = #{playlistId}
+          AND song_id = #{songId}
+    </select>
+
+    <select id="selectNextOrderNum" resultType="int">
+        SELECT COALESCE(MAX(order_num), 0) + 1
+        FROM playlist_songs
+        WHERE playlist_id = #{playlistId}
+    </select>
+
+    <insert id="insertPlaylistSong">
+        INSERT INTO playlist_songs (id, playlist_id, song_id, order_num)
+        VALUES (#{id}, #{playlistId}, #{songId}, #{orderNum})
+    </insert>
+
+    <delete id="deletePlaylistSong">
+        DELETE FROM playlist_songs
+        WHERE playlist_id = #{playlistId}
+          AND song_id = #{songId}
+    </delete>
+
+</mapper>

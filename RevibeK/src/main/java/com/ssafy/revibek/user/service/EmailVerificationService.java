@@ -7,9 +7,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+
+import com.ssafy.revibek.common.ApiException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,18 +28,33 @@ public class EmailVerificationService {
     @Value("${spring.mail.username:}")
     private String senderEmail;
 
+    @Value("${app.email.verification.mode:mock}")
+    private String verificationMode;
+
+    @Value("${app.email.verification.mock-code:123456}")
+    private String mockCode;
+
     private final Map<String, VerificationCodeEntry> codeStore = new ConcurrentHashMap<>();
     private final Map<String, Instant> verifiedEmailStore = new ConcurrentHashMap<>();
 
     public void sendVerificationCode(String email) {
         String normalizedEmail = normalizeEmail(email);
-        if (senderEmail.isBlank()) {
-            throw new RuntimeException("SMTP 발송 계정 설정이 필요합니다.");
-        }
         cleanupExpiredEntries();
-        String code = generateCode();
+        String code = isMockMode() ? mockCode : generateCode();
         Instant expiresAt = Instant.now().plusSeconds(CODE_TTL_SECONDS);
         codeStore.put(normalizedEmail, new VerificationCodeEntry(code, expiresAt));
+
+        if (isMockMode()) {
+            return;
+        }
+
+        if (senderEmail.isBlank()) {
+            throw new ApiException(
+                "EMAIL_SEND_FAILED",
+                "Email sending failed. Please use mock verification code in dev mode.",
+                HttpStatus.SERVICE_UNAVAILABLE
+            );
+        }
 
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(senderEmail);
@@ -47,12 +65,25 @@ public class EmailVerificationService {
             "인증코드: " + code + "\n" +
             "만료시간: 5분"
         );
-        mailSender.send(message);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            throw new ApiException(
+                "EMAIL_SEND_FAILED",
+                "Email sending failed. Please use mock verification code in dev mode.",
+                HttpStatus.SERVICE_UNAVAILABLE
+            );
+        }
     }
 
     public void verifyCode(String email, String code) {
         String normalizedEmail = normalizeEmail(email);
         cleanupExpiredEntries();
+        if (isMockMode() && mockCode.equals(code)) {
+            verifiedEmailStore.put(normalizedEmail, Instant.now().plusSeconds(VERIFIED_TTL_SECONDS));
+            codeStore.remove(normalizedEmail);
+            return;
+        }
         VerificationCodeEntry entry = codeStore.get(normalizedEmail);
         if (entry == null) {
             throw new RuntimeException("인증코드가 없거나 만료되었습니다.");
@@ -88,6 +119,10 @@ public class EmailVerificationService {
 
     private String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private boolean isMockMode() {
+        return "mock".equalsIgnoreCase(verificationMode);
     }
 
     private record VerificationCodeEntry(String code, Instant expiresAt) {

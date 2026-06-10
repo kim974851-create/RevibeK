@@ -35,8 +35,14 @@ public class AnalysisServiceImpl implements AnalysisService {
             return;
         }
 
-        switch (response.getStatus()) {
-            case "COMPLETED" -> {
+        String status = response.getStatus();
+        if (status == null) {
+            System.out.println("[Analysis] 응답 상태 없음: " + song.getTitle());
+            return;
+        }
+
+        switch (status) {
+            case "COMPLETED", "MOCK" -> {
                 // 분석 결과를 songs 테이블에 반영
                 song.setBpm(response.getBpm());
                 song.setEnergy(response.getEnergy());

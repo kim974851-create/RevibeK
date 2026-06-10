@@ -11,9 +11,11 @@ import lombok.NoArgsConstructor;
 public class YoutubeVideoDto {
     private Long id;
     private Long youtubeChannelId;
+    private String channelId;
     private String videoId;
     private String videoUrl;
     private String videoTitle;
+    private String thumbnailUrl;
     private Integer durationSeconds;
     private String publishedAt;
     private String collectStatus;

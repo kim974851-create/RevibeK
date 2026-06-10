@@ -38,19 +38,37 @@ CREATE TABLE songs (
   artist            VARCHAR(100)    NOT NULL,
   genre             VARCHAR(50)     NOT NULL COMMENT '발라드 | 댄스 | 힙합 | R&B | 록',
   era               VARCHAR(20)     NOT NULL COMMENT '90s | 00s | 10s | 20s',
+  generation        VARCHAR(20)     NOT NULL DEFAULT '2세대' COMMENT '1세대 | 2세대 | 3세대 | 4세대 | 5세대',
+  mood              VARCHAR(50)     NOT NULL DEFAULT '회상' COMMENT '자신감 | 위로 | 회상 | 에너지 | 새벽감성',
   type              VARCHAR(20)     NOT NULL COMMENT 'original | ai_remix',
   youtube_url       VARCHAR(300)    NOT NULL,
   youtube_id        VARCHAR(50)     NOT NULL COMMENT 'YouTube 영상 ID',
+  thumbnail_url     VARCHAR(500)    NULL,
   view_count        INT             NOT NULL DEFAULT 0,
   like_count        INT             NOT NULL DEFAULT 0,
   trend_score       FLOAT           NOT NULL DEFAULT 0.0 COMMENT '최근 7일 증가율 기반',
   score             FLOAT           NOT NULL DEFAULT 0.0 COMMENT '가중 합산 점수 (0~100)',
   score_updated_at  DATETIME        NULL,
   released_at       DATE            NULL,
+  duration_seconds  INT             NULL,
+  bpm               DOUBLE          NULL,
+  energy            DOUBLE          NULL,
+  danceability      DOUBLE          NULL,
+  loudness          DOUBLE          NULL,
+  musical_key       VARCHAR(10)     NULL,
+  musical_scale     VARCHAR(10)     NULL,
+  beats_count       INT             NULL,
+  beats_confidence  DOUBLE          NULL,
+  key_strength      DOUBLE          NULL,
+  spectral_centroid DOUBLE          NULL,
+  zero_crossing_rate DOUBLE         NULL,
+  is_analyzed       TINYINT(1)      NOT NULL DEFAULT 0,
   created_at        DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
   INDEX idx_type (type),
   INDEX idx_genre (genre),
+  INDEX idx_generation (generation),
+  INDEX idx_mood (mood),
   INDEX idx_era (era),
   INDEX idx_score (score DESC),
   INDEX idx_youtube_id (youtube_id)
@@ -75,11 +93,28 @@ CREATE TABLE user_songs (
   INDEX idx_user_rating (user_id, rating)
 ) ENGINE=InnoDB COMMENT='유저별 노래 저장/평가/재생 이력';
 
+-- 3-1. SONG_LIKES (사용자별 좋아요)
+CREATE TABLE IF NOT EXISTS song_likes (
+  id          CHAR(36) NOT NULL DEFAULT (UUID()),
+  user_id     CHAR(36) NOT NULL,
+  song_id     CHAR(36) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_user_song_like (user_id, song_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+  INDEX idx_song_like (song_id)
+) ENGINE=InnoDB COMMENT='사용자별 곡 좋아요';
+
 
 -- 4. RADIO_SESSIONS (라디오 생성 이력)
 CREATE TABLE radio_sessions (
   id              CHAR(36)    NOT NULL DEFAULT (UUID()),
   user_id         CHAR(36)    NOT NULL,
+  title           VARCHAR(200) NOT NULL DEFAULT 'RevibeK K-POP 라디오',
+  emotion         VARCHAR(50)  NULL,
+  situation       VARCHAR(100) NULL,
+  generation      VARCHAR(20)  NULL,
   mood            VARCHAR(50) NOT NULL COMMENT '외로운 | 설레는 | 그리운 | 지친 | 행복한 | 슬픈',
   story           TEXT        NULL,
   dj_ment        TEXT        NULL     COMMENT 'Claude API 생성 DJ 멘트',
@@ -170,8 +205,12 @@ CREATE TABLE youtube_videos_raw (
   id            CHAR(36)      NOT NULL DEFAULT (UUID()),
   channel_id    VARCHAR(50)   NOT NULL,
   video_id      VARCHAR(20)   NOT NULL UNIQUE,  -- 중복 방지
+  video_url     VARCHAR(300)  NULL,
+  video_title   VARCHAR(500)  NULL,
+  duration_seconds INT        NULL,
   title         VARCHAR(500),
   published_at  DATETIME,
+  is_analyzed   TINYINT(1)    NOT NULL DEFAULT 0,
   is_imported   TINYINT(1)    NOT NULL DEFAULT 0  COMMENT 'songs 테이블 반영 여부',
   fetched_at    DATETIME      NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (id),
@@ -191,6 +230,11 @@ INSERT INTO users (id, nickname, email, provider, provider_id, password_hash) VA
   ('u003-0000-0000-0000-000000000003', '레트로킹', 'user3@example.com', 'local',   NULL,    '$2a$10$mockHashValue1'),
   ('u004-0000-0000-0000-000000000004', '별빛수집가', 'user4@example.com','google', 'g_004', NULL),
   ('u005-0000-0000-0000-000000000005', '추억여행자', 'user5@example.com','local',  NULL,    '$2a$10$mockHashValue2');
+
+-- 발표 MVP 테스트 계정: demo@revibek.com / password123
+INSERT INTO users (id, nickname, email, provider, provider_id, password_hash) VALUES
+  ('u999-0000-0000-0000-000000000999', '발표시연', 'demo@revibek.com', 'local', NULL,
+   '$2a$10$A49LfStLd9CxMi7aOemmEOLVJd4kGUvaEbmqawlt9vgBo2V06FdkW');
 
 
 -- ② SONGS (원곡 10곡 + AI 리믹스 10곡)
@@ -257,6 +301,30 @@ INSERT INTO songs (id, title, artist, genre, era, type, youtube_url, youtube_id,
 
 ('s020-0000-0000-0000-000000000020', '여수 밤바다 (AI 리마스터)', '버스커버스커', '발라드', '10s', 'ai_remix',
  'https://www.youtube.com/watch?v=dummy020', 'dummy020', 1350000, 68000, 93.0, 91.4, NOW(), '2024-03-15');
+
+-- 발표 MVP용 추천 분류/썸네일 데이터
+UPDATE songs SET generation = '2세대', mood = '회상', thumbnail_url = CONCAT('https://img.youtube.com/vi/', youtube_id, '/hqdefault.jpg')
+WHERE id IN ('s001-0000-0000-0000-000000000001', 's002-0000-0000-0000-000000000002',
+             's003-0000-0000-0000-000000000003', 's004-0000-0000-0000-000000000004',
+             's006-0000-0000-0000-000000000006');
+
+UPDATE songs SET generation = '3세대', mood = '자신감', thumbnail_url = CONCAT('https://img.youtube.com/vi/', youtube_id, '/hqdefault.jpg')
+WHERE id IN ('s005-0000-0000-0000-000000000005', 's009-0000-0000-0000-000000000009',
+             's010-0000-0000-0000-000000000010', 's015-0000-0000-0000-000000000015',
+             's020-0000-0000-0000-000000000020');
+
+UPDATE songs SET generation = '5세대', mood = '에너지', thumbnail_url = CONCAT('https://img.youtube.com/vi/', youtube_id, '/hqdefault.jpg')
+WHERE id IN ('s011-0000-0000-0000-000000000011', 's012-0000-0000-0000-000000000012',
+             's013-0000-0000-0000-000000000013', 's017-0000-0000-0000-000000000017',
+             's018-0000-0000-0000-000000000018');
+
+UPDATE songs SET mood = '새벽감성'
+WHERE id IN ('s014-0000-0000-0000-000000000014', 's016-0000-0000-0000-000000000016',
+             's019-0000-0000-0000-000000000019');
+
+UPDATE songs SET bpm = 120, energy = 0.72, danceability = 0.68, loudness = -8.5,
+                 musical_key = 'C', musical_scale = 'major', is_analyzed = 1
+WHERE bpm IS NULL;
 
 
 -- ③ USER_SONGS (저장·평가 데이터)

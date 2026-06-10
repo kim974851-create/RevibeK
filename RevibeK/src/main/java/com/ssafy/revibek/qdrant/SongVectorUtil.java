@@ -15,7 +15,13 @@ public class SongVectorUtil {
 
     // 9차원 벡터 반환: 분석값이 없으면 null
     public static float[] toVector(SongDto song) {
-        if (song.getBpm() == null || song.getEnergy() == null) return null;
+        if (song == null
+            || song.getBpm() == null
+            || song.getEnergy() == null
+            || song.getDanceability() == null
+            || song.getLoudness() == null) {
+            return null;
+        }
 
         int keyIdx = KEY_INDEX.getOrDefault(song.getMusicalKey(), 0);
         double keyRad = keyIdx * Math.PI / 6.0;

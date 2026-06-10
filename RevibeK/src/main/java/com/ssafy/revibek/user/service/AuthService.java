@@ -1,12 +1,14 @@
 package com.ssafy.revibek.user.service;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.ssafy.revibek.auth.JwtTokenProvider;
 import com.ssafy.revibek.auth.RefreshTokenStore;
 import com.ssafy.revibek.auth.dto.AuthTokenResponseDto;
+import com.ssafy.revibek.common.ApiException;
 import com.ssafy.revibek.user.dto.UserAuthDto;
 import com.ssafy.revibek.user.dto.UserLoginRequestDto;
 import com.ssafy.revibek.user.dto.UserRegisterRequestDto;
@@ -75,14 +77,14 @@ public class AuthService {
 
     public AuthTokenResponseDto refresh(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("유효하지 않은 refresh token 입니다.");
+            throw invalidRefreshToken();
         }
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-            throw new RuntimeException("refresh token 타입이 아닙니다.");
+            throw invalidRefreshToken();
         }
         String userId = jwtTokenProvider.getUserId(refreshToken);
         if (!refreshTokenStore.isValid(userId, refreshToken)) {
-            throw new RuntimeException("로그아웃되었거나 만료된 refresh token 입니다.");
+            throw invalidRefreshToken();
         }
         UserResponseDto user = userMapper.selectUserById(userId);
         if (user == null) {
@@ -98,10 +100,10 @@ public class AuthService {
 
     public void logout(String refreshToken) {
         if (!jwtTokenProvider.validateToken(refreshToken)) {
-            throw new RuntimeException("유효하지 않은 refresh token 입니다.");
+            throw invalidRefreshToken();
         }
         if (!jwtTokenProvider.isRefreshToken(refreshToken)) {
-            throw new RuntimeException("refresh token 타입이 아닙니다.");
+            throw invalidRefreshToken();
         }
         refreshTokenStore.revoke(refreshToken);
     }
@@ -128,5 +130,13 @@ public class AuthService {
 
     private String normalizeEmail(String email) {
         return email == null ? null : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private ApiException invalidRefreshToken() {
+        return new ApiException(
+            "INVALID_REFRESH_TOKEN",
+            "Refresh token is invalid or expired.",
+            HttpStatus.UNAUTHORIZED
+        );
     }
 }

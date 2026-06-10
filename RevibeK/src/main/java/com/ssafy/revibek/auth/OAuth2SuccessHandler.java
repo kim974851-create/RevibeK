@@ -32,6 +32,19 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         String providerId = (String) oAuth2User.getAttributes().get("sub");
         String nickname = (String) oAuth2User.getAttributes().getOrDefault("name", "google-user");
 
+        if (email == null || email.isBlank() || providerId == null || providerId.isBlank()) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            response.setContentType("application/json;charset=UTF-8");
+            objectMapper.writeValue(response.getWriter(),
+                java.util.Map.of(
+                    "code", "OAUTH_PROFILE_MISSING",
+                    "message", "Google OAuth profile does not contain required email or subject."
+                )
+            );
+            clearAuthenticationAttributes(request);
+            return;
+        }
+
         AuthTokenResponseDto tokenResponse = authService.loginWithGoogle(email, providerId, nickname);
 
         response.setStatus(HttpServletResponse.SC_OK);

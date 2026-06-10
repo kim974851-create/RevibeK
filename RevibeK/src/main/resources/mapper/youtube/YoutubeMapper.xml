@@ -4,19 +4,19 @@
 <mapper namespace="com.ssafy.revibek.youtube.mapper.YoutubeMapper">
 
     <insert id="insertChannel" parameterType="com.ssafy.revibek.youtube.dto.YoutubeChannelDto">
-        INSERT IGNORE INTO youtube_channels (channel_id, channel_name, channel_url)
-        VALUES (#{channelId}, #{channelName}, #{channelUrl})
+        INSERT IGNORE INTO youtube_channels (url, channel_id, channel_name, uploads_playlist, last_checked_at)
+        VALUES (#{channelUrl}, #{channelId}, #{channelName}, #{uploadsPlaylist}, NOW())
     </insert>
 
-    <select id="findChannelIdByChannelId" parameterType="String" resultType="Long">
+    <select id="findChannelIdByChannelId" parameterType="String" resultType="String">
         SELECT id FROM youtube_channels WHERE channel_id = #{channelId}
     </select>
 
 	<insert id="insertVideo" parameterType="com.ssafy.revibek.youtube.dto.YoutubeVideoDto">
 	    INSERT IGNORE INTO youtube_videos_raw
-	        (youtube_channel_id, video_id, video_url, video_title, duration_seconds, published_at)
+	        (channel_id, video_id, video_url, video_title, title, duration_seconds, published_at)
 	    VALUES
-	        (#{youtubeChannelId}, #{videoId}, #{videoUrl}, #{videoTitle}, #{durationSeconds}, #{publishedAt})
+	        (#{channelId}, #{videoId}, #{videoUrl}, #{videoTitle}, #{videoTitle}, #{durationSeconds}, #{publishedAt})
 	</insert>
 
 </mapper>
