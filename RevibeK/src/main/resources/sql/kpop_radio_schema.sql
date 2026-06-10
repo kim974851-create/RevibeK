@@ -93,6 +93,19 @@ CREATE TABLE user_songs (
   INDEX idx_user_rating (user_id, rating)
 ) ENGINE=InnoDB COMMENT='유저별 노래 저장/평가/재생 이력';
 
+-- 3-1. SONG_LIKES (사용자별 좋아요)
+CREATE TABLE IF NOT EXISTS song_likes (
+  id          CHAR(36) NOT NULL DEFAULT (UUID()),
+  user_id     CHAR(36) NOT NULL,
+  song_id     CHAR(36) NOT NULL,
+  created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  UNIQUE KEY uq_user_song_like (user_id, song_id),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (song_id) REFERENCES songs(id) ON DELETE CASCADE,
+  INDEX idx_song_like (song_id)
+) ENGINE=InnoDB COMMENT='사용자별 곡 좋아요';
+
 
 -- 4. RADIO_SESSIONS (라디오 생성 이력)
 CREATE TABLE radio_sessions (

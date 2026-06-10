@@ -2,6 +2,7 @@ package com.ssafy.revibek.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -25,6 +26,9 @@ public class SecurityConfig {
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
 
+    @Value("${app.oauth.google.enabled:false}")
+    private boolean googleOAuthEnabled;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
@@ -44,16 +48,21 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/users/me").authenticated()
                 .requestMatchers(HttpMethod.PUT, "/api/users/me").authenticated()
                 .requestMatchers(HttpMethod.DELETE, "/api/users/me").authenticated()
+                .requestMatchers("/api/songs/*/like", "/api/songs/*/like-status").authenticated()
                 .requestMatchers("/api/usersongs/**").authenticated()
                 .requestMatchers("/api/radio/**").authenticated()
                 .requestMatchers("/api/radios/**").authenticated()
+                .requestMatchers("/api/playlists/**").authenticated()
                 .anyRequest().permitAll()
             )
-            .oauth2Login(oauth2 -> oauth2
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        if (googleOAuthEnabled) {
+            http.oauth2Login(oauth2 -> oauth2
                 .redirectionEndpoint(redirection -> redirection.baseUri("/auth/google/callback"))
                 .successHandler(oAuth2SuccessHandler)
-            )
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            );
+        }
 
         return http.build();
     }

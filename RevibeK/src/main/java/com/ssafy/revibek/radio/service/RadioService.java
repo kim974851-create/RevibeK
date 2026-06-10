@@ -25,12 +25,13 @@ public class RadioService {
 	public RadioCreateResponseDto createSession(String userId, RadioRequestDto dto) {
 		String emotion = defaultText(dto.getEmotion(), "오늘의 감정");
 		String situation = defaultText(dto.getSituation(), dto.getStory());
-		String generation = defaultText(dto.getGeneration(), "K-POP");
-		String mood = defaultText(dto.getMood(), "감성");
+		String generation = firstNonBlank("K-POP", dto.getGeneration(), dto.getEra());
+		String mood = firstNonBlank("감성", dto.getMood(), dto.getGenre());
 		String story = defaultText(dto.getStory(), situation);
 		String title = buildTitle(situation, mood, generation);
 		String djMessage = buildDjMessage(emotion, situation, generation, mood);
 		List<SongDto> recommendedSongs = songService.getRadioRecommendedSongs(generation, mood, 5);
+		djMessage = enrichDjMessageWithSongs(djMessage, recommendedSongs);
 
 		String sessionId = UUID.randomUUID().toString();
 		radioMapper.insertRadioSession(
@@ -128,6 +129,15 @@ public class RadioService {
 		return songMood + " 분위기가 " + mood + " 라디오 흐름과 잘 어울립니다.";
 	}
 
+	private String enrichDjMessageWithSongs(String baseMessage, List<SongDto> recommendedSongs) {
+		if (recommendedSongs == null || recommendedSongs.isEmpty()) {
+			return baseMessage;
+		}
+		SongDto first = recommendedSongs.get(0);
+		return baseMessage + " 첫 곡은 " + first.getArtist() + "의 '" + first.getTitle()
+			+ "'입니다. 이 곡으로 지금의 분위기를 자연스럽게 열어볼게요.";
+	}
+
 	private boolean containsAny(String value, String... keywords) {
 		if (value == null) {
 			return false;
@@ -148,5 +158,14 @@ public class RadioService {
 			return fallback.trim();
 		}
 		return "오늘";
+	}
+
+	private String firstNonBlank(String fallback, String... values) {
+		for (String value : values) {
+			if (value != null && !value.isBlank()) {
+				return value.trim();
+			}
+		}
+		return fallback;
 	}
 }

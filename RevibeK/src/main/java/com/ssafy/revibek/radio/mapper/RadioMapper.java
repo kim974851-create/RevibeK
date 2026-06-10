@@ -21,6 +21,7 @@ public interface RadioMapper {
 						   @Param("djMent") String djMent);
 	RadioResponseDto selectRadioSessionByIdAndUserId(@Param("id") String id,
 													 @Param("userId") String userId);
+	RadioResponseDto selectRadioSessionById(@Param("id") String id);
 	List<RadioResponseDto> selectRadioSessionByUserId(@Param("userId") String userId);
 	void insertRecommendation(@Param("sessionId") String sessionId,
 							  @Param("songId")	String songId,

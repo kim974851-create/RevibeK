@@ -25,6 +25,14 @@
           AND user_id = #{userId}
     </select>
 
+    <select id="selectRadioSessionById"
+        resultType="com.ssafy.revibek.radio.dto.RadioResponseDto">
+        SELECT id, title, emotion, situation, generation, mood, story,
+               dj_ment, comfort_text, novel_excerpt, created_at
+        FROM radio_sessions
+        WHERE id = #{id}
+    </select>
+
     <!-- 유저의 세션 목록 -->
     <select id="selectRadioSessionByUserId" parameterType="string"
         resultType="com.ssafy.revibek.radio.dto.RadioResponseDto">

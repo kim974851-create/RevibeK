@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.revibek.song.mapper.SongLikeMapper">
+
+    <select id="countLike" resultType="int">
+        SELECT COUNT(1)
+        FROM song_likes
+        WHERE user_id = #{userId}
+          AND song_id = #{songId}
+    </select>
+
+    <insert id="insertLike">
+        INSERT IGNORE INTO song_likes (id, user_id, song_id)
+        VALUES (#{id}, #{userId}, #{songId})
+    </insert>
+
+    <delete id="deleteLike">
+        DELETE FROM song_likes
+        WHERE user_id = #{userId}
+          AND song_id = #{songId}
+    </delete>
+
+    <update id="increaseLikeCount">
+        UPDATE songs
+        SET like_count = like_count + 1
+        WHERE id = #{songId}
+    </update>
+
+    <update id="decreaseLikeCount">
+        UPDATE songs
+        SET like_count = GREATEST(like_count - 1, 0)
+        WHERE id = #{songId}
+    </update>
+
+    <select id="selectLikeCount" resultType="int">
+        SELECT COALESCE(like_count, 0)
+        FROM songs
+        WHERE id = #{songId}
+    </select>
+
+</mapper>
