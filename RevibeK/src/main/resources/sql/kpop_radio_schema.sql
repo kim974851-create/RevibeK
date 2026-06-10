@@ -218,6 +218,11 @@ INSERT INTO users (id, nickname, email, provider, provider_id, password_hash) VA
   ('u004-0000-0000-0000-000000000004', '별빛수집가', 'user4@example.com','google', 'g_004', NULL),
   ('u005-0000-0000-0000-000000000005', '추억여행자', 'user5@example.com','local',  NULL,    '$2a$10$mockHashValue2');
 
+-- 발표 MVP 테스트 계정: demo@revibek.com / password123
+INSERT INTO users (id, nickname, email, provider, provider_id, password_hash) VALUES
+  ('u999-0000-0000-0000-000000000999', '발표시연', 'demo@revibek.com', 'local', NULL,
+   '$2a$10$A49LfStLd9CxMi7aOemmEOLVJd4kGUvaEbmqawlt9vgBo2V06FdkW');
+
 
 -- ② SONGS (원곡 10곡 + AI 리믹스 10곡)
 INSERT INTO songs (id, title, artist, genre, era, type, youtube_url, youtube_id, view_count, like_count, trend_score, score, score_updated_at, released_at) VALUES
