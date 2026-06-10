@@ -10,21 +10,45 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class FastApiClient {
 
+    @Value("${fastapi.enabled:false}")
+    private boolean enabled;
+
     @Value("${fastapi.host:http://localhost:8000}")
     private String fastApiHost;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     public AnalyzeResponseDto analyze(AnalyzeRequestDto request) {
+        if (!enabled) {
+            return mockAnalyze(request, "FastAPI disabled. Using mock analysis result.");
+        }
+
         String url = fastApiHost + "/api/ai/analyze";
         try {
             ResponseEntity<AnalyzeResponseDto> response =
                 restTemplate.postForEntity(url, request, AnalyzeResponseDto.class);
             return response.getBody();
         } catch (Exception e) {
-            // FastAPI 호출 실패 시 FAILED 상태 반환
-            AnalyzeResponseDto failed = new AnalyzeResponseDto();
-            return failed;
+            return mockAnalyze(request, "FastAPI unavailable. Using mock analysis result.");
         }
+    }
+
+    private AnalyzeResponseDto mockAnalyze(AnalyzeRequestDto request, String message) {
+        AnalyzeResponseDto response = new AnalyzeResponseDto();
+        response.setYoutubeVideoId(request.getYoutubeVideoId());
+        response.setTitle(request.getTitle() == null || request.getTitle().isBlank()
+            ? request.getYoutubeVideoId()
+            : request.getTitle());
+        response.setStatus("MOCK");
+        response.setMessage(message);
+        response.setAudioPath(null);
+        response.setDurationSeconds(request.getDurationSeconds());
+        response.setBpm(120.0);
+        response.setEnergy(0.6);
+        response.setDanceability(0.6);
+        response.setLoudness(-8.0);
+        response.setMusicalKey("C");
+        response.setMusicalScale("major");
+        return response;
     }
 }

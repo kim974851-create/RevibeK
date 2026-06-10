@@ -9,6 +9,7 @@ import io.qdrant.client.grpc.Points.QueryPoints;
 import io.qdrant.client.grpc.Points.ScoredPoint;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
@@ -30,12 +31,21 @@ public class QdrantService {
 
     private final QdrantClient qdrantClient;
 
+    @Value("${qdrant.enabled:false}")
+    private boolean enabled;
+
     // Spring @Value 어노테이션과 Qdrant Value 타입 충돌 방지: 필드명으로 직접 주입
-    private String collection = "songs";
+    @Value("${qdrant.collection:revibek_songs}")
+    private String collection;
 
     private static final int VECTOR_SIZE = 9;
 
     public void createCollectionIfNotExists() {
+        if (!enabled) {
+            log.info("Qdrant disabled. Skip collection initialization.");
+            return;
+        }
+
         try {
             List<String> existing = qdrantClient.listCollectionsAsync().get();
             if (existing.contains(collection)) return;
@@ -52,6 +62,11 @@ public class QdrantService {
     }
 
     public void upsertSong(SongDto song) {
+        if (!enabled) {
+            log.info("Qdrant disabled. Skip song upsert: {}", song.getId());
+            return;
+        }
+
         float[] vector = SongVectorUtil.toVector(song);
         if (vector == null) {
             log.warn("벡터 생성 불가 (분석값 없음): {}", song.getId());
@@ -71,6 +86,11 @@ public class QdrantService {
     }
 
     public void upsertSongs(List<SongDto> songs) {
+        if (!enabled) {
+            log.info("Qdrant disabled. Skip batch upsert: {} songs", songs.size());
+            return;
+        }
+
         List<PointStruct> points = songs.stream()
             .flatMap(s -> {
                 float[] vec = SongVectorUtil.toVector(s);
@@ -93,6 +113,11 @@ public class QdrantService {
     }
 
     public List<String> searchSimilar(String songId, int limit) {
+        if (!enabled) {
+            log.info("Qdrant disabled. Return empty vector result for songId={}", songId);
+            return List.of();
+        }
+
         try {
             List<ScoredPoint> results = qdrantClient.queryAsync(
                 QueryPoints.newBuilder()
